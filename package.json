@@ -1,0 +1,21 @@
+{
+  "name": "keep-accounts-server",
+  "version": "1.0.0",
+  "description": "keep accounts app server",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./src/app.js",
+    "serve": "nodemon ./src/app.js "
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "gradient-avatar": "^1.0.2",
+    "koa": "^2.13.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-router": "^10.0.0",
+    "mongoose": "^5.12.12",
+    "validator": "^13.6.0"
+  }
+}
