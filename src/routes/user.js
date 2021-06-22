@@ -1,23 +1,27 @@
 const avatar = require('gradient-avatar')
 const Router = require('koa-router')
-
-const User = require('../models/User') // User 模板
-const { getHash } = require('../utils/hash')
 const validator = require('validator')
+const jwt = require('jsonwebtoken')
+const { secret } = require('../config')
+const User = require('../models/User') // User 模板
+const { ctx200, ctx500 } = require('../utils/ctx')
+const { getHash, checkHash } = require('../utils/hash')
 
 const router = new Router()
 
+// const userDoc = require('./doc/user')
+
 /**
  * @route POST api/user/register
- * @desc 用户注册接口
- * @access 接口是公开的
+ * @desc 用户注册
  */
 router.post('/register', async ctx => {
   let { name, email, password, password2 } = ctx.request.body
-  name = name && name.trim()
-  email = email && email.trim()
-  password = password && password.trim()
-  password2 = password2 && password2.trim()
+  name = name && name.trim() || ''
+  email = email && email.trim() || ''
+  password = password && password.trim() || ''
+  password2 = password2 && password2.trim() || ''
+
   ctx.status = 500
 
   // 首先判断 email 是否已占用
@@ -53,8 +57,56 @@ router.post('/register', async ctx => {
         console.log(err)
       })
   }
+})
 
+/**
+ * @route POST api/user/login 
+ * @desc 用户登录
+ */
+router.post('/login', async ctx => {
+  let { email, password } = ctx.request.body
 
+  // 查询用户
+  let user = await User.findOne({ email })
+
+  if (user) {
+    // 检查密码是否正确
+    if (checkHash(password, user.password)) {
+      let { id, name, email, avatar } = user
+
+      // 生成 token
+      const token = jwt.sign({ id, time: new Date().getTime(), timeout: 1000 * 60 * 60 }, secret)
+
+      ctx.body = { token, id, name, email, avatar }
+    } else {
+      ctx500(ctx, '密码不正确')
+    }
+  } else {
+    ctx500(ctx, '用户不存在')
+  }
+
+})
+
+/**
+ * @route DELETE api/user/delete 
+ * @desc 用户注销、删除
+ */
+router.delete('/delete', async ctx => {
+  // 先查找用户
+  let { id } = ctx.request.query
+  try {
+    let user = await User.findById(id)
+    if (user) {
+      await User.deleteOne({ _id: id })
+      ctx200(ctx, '用户注销成功')
+    } else {
+      ctx500(ctx, '用户不存在')
+    }
+  } catch (error) {
+    // id 长度不等于24时会报错
+    ctx500(ctx, '用户不存在')
+    // console.error(error)
+  }
 })
 
 module.exports = router.routes()

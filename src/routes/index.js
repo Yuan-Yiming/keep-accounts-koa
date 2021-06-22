@@ -1,8 +1,10 @@
 const user = require('./user')
+const bill = require('./bill')
 
 
 const routeDict = {
-  '/api/user': user
+  '/api/user': user,
+  '/api/bill': bill
 }
 
 // 注册路由
